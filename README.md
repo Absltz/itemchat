@@ -41,7 +41,7 @@ JEI 和 FTB Quests 为可选依赖。使用任务功能时，请安装 FTB Quest
 
 ## 从源码构建
 
-两个版本分别位于 [Forge 工程](itemchat-forge/README.md) 和 [NeoForge 工程](itemchat/README.md)，可独立构建。
+两个版本分别位于 [Forge 工程](itemchat-forge/README.md) 和 [NeoForge 工程](itemchat-neoforge/README.md)，可独立构建。
 
 设置 `JAVA_HOME` 指向对应的 JDK 后，进入工程目录执行：
 
@@ -59,4 +59,4 @@ JEI 和 FTB Quests 为可选依赖。使用任务功能时，请安装 FTB Quest
 
 ## 许可证
 
-GPL-3.0，完整条款见 [Forge LICENSE](itemchat-forge/LICENSE) 和 [NeoForge LICENSE](itemchat/LICENSE)。
+GPL-3.0，完整条款见 [Forge LICENSE](itemchat-forge/LICENSE) 和 [NeoForge LICENSE](itemchat-neoforge/LICENSE)。

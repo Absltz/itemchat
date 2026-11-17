@@ -4,7 +4,7 @@
 
 当前版本：1.3.1。作者：Abslt_。
 
-[下载成品](https://github.com/Absltz/itemchat/releases/tag/forge-1.3.1) · [项目总览](../README.md) · [NeoForge 1.21.1 版](../itemchat/README.md)
+[下载成品](https://github.com/Absltz/itemchat/releases/tag/forge-1.3.1) · [项目总览](../README.md) · [NeoForge 1.21.1 版](../itemchat-neoforge/README.md)
 
 ## 环境要求
 

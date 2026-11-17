@@ -29,4 +29,4 @@ gradle.beforeProject { project ->
     }
 }
 
-rootProject.name = 'itemchat'
+rootProject.name = 'itemchat-neoforge'

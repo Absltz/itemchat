@@ -396,7 +396,7 @@ class ClientInputRegression(unittest.TestCase):
         javac = str(Path(jdk) / f"bin/javac{suffix}") if jdk else shutil.which("javac")
         java = str(Path(jdk) / f"bin/java{suffix}") if jdk else shutil.which("java")
         self.assertTrue(javac and java, "Set ITEMCHAT_TEST_JDK to a Java 17+ JDK")
-        for loader, project in (("forge", "itemchat-forge"), ("neoforge", "itemchat")):
+        for loader, project in (("forge", "itemchat-forge"), ("neoforge", "itemchat-neoforge")):
             with tempfile.TemporaryDirectory(prefix=f"itemchat-{loader}-input-") as temporary:
                 directory = Path(temporary)
                 sources, expand = fixtures(loader)
