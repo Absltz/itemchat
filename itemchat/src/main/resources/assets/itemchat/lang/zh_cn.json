@@ -1,4 +1,7 @@
 {
+  "key.categories.itemchat": "ItemChat",
+  "key.itemchat.share": "展示物品或任务",
+
   "itemchat.chat.share_item": "[物品] %1$s 展示了 %2$s%3$s %4$s",
   "itemchat.chat.share_quest": "[任务] %1$s 展示了 %2$s %3$s",
   "itemchat.chat.item_count": " ×%s",

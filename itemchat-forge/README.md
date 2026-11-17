@@ -3,8 +3,10 @@
 一个 Minecraft **Forge 1.20.1** 模组：在物品上按【鼠标中键】，就能在聊天栏向所有玩家展示它，
 并附一个可点击的 **[检查]** 按钮，点一下直接跳到 JEI 里该物品的配方界面。
 
-> 当前版本 **1.3.0**（作者 Abslt_）。本工程是 Forge 1.20.1 线，产物为 `itemchat-1.3.0-forge.jar`。
-> NeoForge 1.21.1 线是另一个独立工程（目录 `itemchat`），版本 1.2.2，产物 `itemchat-1.2.2-neoforge.jar`。
+> 当前版本 **1.3.1**（作者 Abslt_）。本工程是 Forge 1.20.1 线，产物为 `itemchat-1.3.1-forge.jar`。
+> NeoForge 1.21.1 线是另一个独立工程（目录 `itemchat`），版本 1.2.3，产物 `itemchat-1.2.3-neoforge.jar`。
+
+默认使用鼠标中键分享。可在「选项 → 控制 → 按键绑定 → ItemChat → 展示物品或任务」中改为其它鼠标键、键盘键或组合键，也可以按 Esc 解绑。使用 AE 中键合成时，先把分享改到其它键或解绑；之后普通中键不会再被 ItemChat 拦截。
 
 ## 功能
 
@@ -73,10 +75,10 @@ gradlew.bat build
 ./gradlew build
 ```
 
-产物在 `build/libs/itemchat-1.3.0-forge.jar`。
+产物在 `build/libs/itemchat-1.3.1-forge.jar`。
 
 命名规则是 `<modid>-<modversion>-<loader>.jar`：Forge 版带 `-forge` 后缀，
-和 NeoForge 版的 `itemchat-1.2.2-neoforge.jar` 区分开，便于按所用加载器选择正确文件；两版不能混装。
+和 NeoForge 版的 `itemchat-1.2.3-neoforge.jar` 区分开，便于按所用加载器选择正确文件；两版不能混装。
 
 在 IDE 里调试：
 
@@ -158,7 +160,7 @@ FTB Library 2001.2.13 自带的 refmap 写的是「注解里的官方名 → 生
 
 ## 安装
 
-**客户端**：把 `itemchat-1.3.0-forge.jar` 放进 `.minecraft/mods/`。
+**客户端**：把 `itemchat-1.3.1-forge.jar` 放进 `.minecraft/mods/`。
 
 **服务端**：同一个 jar 也放进服务端的 `mods/` 目录。**这一步是必须的** —— 广播消息需要服务端构造富文本组件，
 只有客户端装了的话，别人是看不到按钮的（游戏会提示"当前服务器没有安装 ItemChat"）。
@@ -174,9 +176,15 @@ FTB Library 2001.2.13 自带的 refmap 写的是「注解里的官方名 → 生
 **分享 FTB 任务**：打开 FTB 任务书 → 鼠标悬停在某个任务上 → 按**中键**。
 （FTB 任务书默认没有绑定按键，需要在「选项 → 按键控制 → FTB 任务」里自己绑一个，或用任务书物品右键。）
 
-想改默认按键？目前中键是写死在代码里的（不占用原版按键绑定），需要改的话修改
-`ClientEvents#onMouseButtonPre` 中的
-`GLFW.GLFW_MOUSE_BUTTON_MIDDLE` 即可。
+想改默认按键？打开「选项 → 控制 → 按键绑定」，在 **ItemChat** 分类下修改「**展示物品或任务**」。
+按住 Shift、Ctrl 或 Alt 再点击目标键可设置组合键；按 Esc 可解绑。改键会保存在本机的 `options.txt` 中。
+鼠标和键盘绑定都支持背包、JEI 与 FTB 任务；键盘绑定不会在已聚焦的原版文本输入框或 JEI 搜索框中触发，长按也只分享一次。
+
+## 1.3.1 更新内容
+
+- 新增：在原版按键绑定设置中修改分享按键，支持鼠标、键盘、组合键和解绑，默认仍为鼠标中键。
+- 修复：改键或解绑后不再捕获旧中键，AE 中键合成可正常接收点击。
+- 保留 JEI 物品与 FTB 任务的早期鼠标捕获；网络包结构和协议版本 `"1"` 不变。
 
 ## 代码结构
 
@@ -195,7 +203,8 @@ src/main/java/com/example/itemchat/
 │   ├── FtbQuestServerBridge.java     真正接触 FTB 类的那部分（仅在已加载时被触碰）
 │   └── ItemChatCommands.java         /itemchat jei|quest 命令
 └── client/
-    ├── ClientEvents.java             捕获中键（统一使用 InputEvent.MouseButton.Pre）
+    ├── ClientEvents.java             分享输入（早期鼠标事件 + 界面键盘事件）
+    ├── ClientKeyMappings.java        注册可配置的分享按键，默认鼠标中键
     ├── ClientPayloadHandler.java     处理两个"打开"包
     ├── JeiIntegration.java           JEI 桥接（打开配方 / 读取鼠标悬停物品）
     ├── ItemChatJeiPlugin.java        JEI 插件入口

@@ -4,8 +4,10 @@ import com.example.itemchat.ItemChat;
 import com.example.itemchat.net.ItemChatNetwork;
 import com.example.itemchat.net.ShareItemPacket;
 import com.example.itemchat.net.ShareQuestPacket;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -15,6 +17,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -22,7 +25,7 @@ import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * 客户端的中键捕获。
+ * 客户端分享输入：默认中键，也支持控制设置中的鼠标、键盘和组合键绑定。
  *
  * <h3>为什么统一用 {@link InputEvent.MouseButton.Pre}，而不是 {@code ScreenEvent}</h3>
  *
@@ -47,29 +50,71 @@ public final class ClientEvents {
 
     private static final String JEI_MOD_ID = "jei";
     private static final String FTB_QUESTS_MOD_ID = "ftbquests";
+    private static InputConstants.Key heldShareKey = InputConstants.UNKNOWN;
 
     private ClientEvents() {
     }
 
     /**
-     * 中键的统一入口。按「JEI 悬停物品 &gt; FTB 任务 &gt; 容器槽位」的顺序处理，
-     * 命中任意一个就吃掉这次中键。
-     *
-     * <p>这个监听会对所有鼠标按下都触发，所以除了「按下 + 中键」之外一律直接放行，
-     * 不会影响任何其它操作。</p>
+     * 保留早期鼠标入口，但只处理当前绑定；改键或解绑后，旧中键完整交给 AE 等界面。
      */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onMouseButtonPre(InputEvent.MouseButton.Pre event) {
         if (event.getAction() != GLFW.GLFW_PRESS) {
             return;
         }
-        if (event.getButton() != GLFW.GLFW_MOUSE_BUTTON_MIDDLE) {
+        if (!ClientKeyMappings.SHARE.isActiveAndMatches(
+                InputConstants.Type.MOUSE.getOrCreate(event.getButton()))) {
             return;
         }
 
-        Screen screen = Minecraft.getInstance().screen;
-        if (screen == null) {
+        if (tryShareUnderMouse(Minecraft.getInstance().screen)) {
+            event.setCanceled(true);
+        }
+    }
+
+    /** 键盘改键也在界面处理之前触发；输入框正在打字时保留原有输入。 */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        InputConstants.Key key = InputConstants.getKey(event.getKeyCode(), event.getScanCode());
+        if (!ClientKeyMappings.SHARE.isActiveAndMatches(key)) {
             return;
+        }
+        Screen screen = event.getScreen();
+        if (screen.getFocused() instanceof EditBox editBox && editBox.isFocused()) {
+            return;
+        }
+        if (ModList.get().isLoaded(JEI_MOD_ID) && JeiIntegration.hasKeyboardFocus()) {
+            return;
+        }
+        // 界面按键事件也包含系统长按重复；一次按下只广播一次。
+        if (key.equals(heldShareKey)) {
+            event.setCanceled(true);
+            return;
+        }
+        if (tryShareUnderMouse(screen)) {
+            heldShareKey = key;
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
+    public static void onKeyReleased(ScreenEvent.KeyReleased.Pre event) {
+        if (heldShareKey.equals(InputConstants.getKey(event.getKeyCode(), event.getScanCode()))) {
+            heldShareKey = InputConstants.UNKNOWN;
+        }
+    }
+
+    /** 关闭界面后可能在游戏中松键，重新打开界面时清除旧状态。 */
+    @SubscribeEvent
+    public static void onScreenInit(ScreenEvent.Init.Pre event) {
+        heldShareKey = InputConstants.UNKNOWN;
+    }
+
+    /** 两种输入共用目标选择；只有确实命中物品或任务时才消费事件。 */
+    private static boolean tryShareUnderMouse(Screen screen) {
+        if (screen == null || Minecraft.getInstance().player == null) {
+            return false;
         }
 
         // 1) JEI：物品管理器列表 / 配方界面 / 书签栏里鼠标悬停的物品。
@@ -78,8 +123,7 @@ public final class ClientEvents {
             ItemStack jeiStack = JeiIntegration.getItemStackUnderMouse();
             if (!jeiStack.isEmpty()) {
                 shareItem(jeiStack);
-                event.setCanceled(true);
-                return;
+                return true;
             }
         }
 
@@ -88,8 +132,7 @@ public final class ClientEvents {
             long questId = FtbQuestsIntegration.getQuestIdUnderMouse(screen);
             if (questId != 0L) {
                 shareQuest(questId);
-                event.setCanceled(true);
-                return;
+                return true;
             }
         }
 
@@ -97,15 +140,16 @@ public final class ClientEvents {
         if (screen instanceof AbstractContainerScreen<?> containerScreen) {
             Slot slot = containerScreen.getSlotUnderMouse();
             if (slot == null || !slot.hasItem()) {
-                return;
+                return false;
             }
             ItemStack stack = slot.getItem();
             if (stack.isEmpty()) {
-                return;
+                return false;
             }
             shareItem(stack);
-            event.setCanceled(true);
+            return true;
         }
+        return false;
     }
 
     /** 把物品发给服务端广播；服务端没装本模组时只在自己屏幕上提示一句。 */

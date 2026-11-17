@@ -34,6 +34,11 @@ public final class JeiIntegration {
         runtime = null;
     }
 
+    /** JEI 搜索框独立管理焦点，不能只检查 Screen#getFocused()。 */
+    public static boolean hasKeyboardFocus() {
+        return runtime != null && runtime.getIngredientListOverlay().hasKeyboardFocus();
+    }
+
     /** 是否已拿到 JEI 运行时（没装 JEI、或 JEI 尚未初始化时为 false）。 */
     public static boolean isAvailable() {
         return runtime != null;

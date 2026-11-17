@@ -33,6 +33,11 @@ public final class JeiIntegration {
         runtime = null;
     }
 
+    /** JEI 搜索框独立管理焦点，不能只检查 Screen#getFocused()。 */
+    public static boolean hasKeyboardFocus() {
+        return runtime != null && runtime.getIngredientListOverlay().hasKeyboardFocus();
+    }
+
     /**
      * 取当前鼠标悬停的那个物品，作为"要分享的物品"。
      *

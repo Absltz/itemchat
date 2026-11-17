@@ -2,8 +2,10 @@
 
 一个 Minecraft **NeoForge 1.21.1** 模组：对着物品按【鼠标中键】就能在聊天栏向所有玩家展示它，并附一个可点击的 **[检查]** 按钮，点一下直接跳到 JEI 里该物品的配方界面；对着 FTB 任务按中键则会展示该任务，并附 **[检查任务]** 按钮回跳任务书。
 
-> 本项目由 Forge 1.20.1 版本移植而来，当前为 **1.2.2**。
+> 本项目由 Forge 1.20.1 版本移植而来，当前为 **1.2.3**。
 > 注意：本号是 NeoForge 1.21.1 这条线**自己的**版本序列，与 Forge 1.20.1 线（`itemchat-forge`）的版本号互相独立、不跟随。
+
+默认使用鼠标中键分享。可在「选项 → 控制 → 按键绑定 → ItemChat → 展示物品或任务」中改为其它鼠标键、键盘键或组合键，也可以按 Esc 解绑。使用 AE 中键合成时，先把分享改到其它键或解绑；之后普通中键不会再被 ItemChat 拦截。
 
 ## 功能
 
@@ -41,10 +43,10 @@ gradlew.bat build
 ./gradlew build
 ```
 
-产物在 `build/libs/itemchat-1.2.2-neoforge.jar`。
+产物在 `build/libs/itemchat-1.2.3-neoforge.jar`。
 
 命名规则是 `<modid>-<modversion>-<loader>.jar`：NeoForge 版带 `-neoforge` 后缀，
-和 Forge 版的 `itemchat-1.3.0-forge.jar` 区分开，便于按所用加载器选择正确文件；两版不能混装。
+和 Forge 版的 `itemchat-1.3.1-forge.jar` 区分开，便于按所用加载器选择正确文件；两版不能混装。
 
 在 IDE 里调试：
 
@@ -83,7 +85,7 @@ export JAVA_HOME=/path/to/jdk-21     # Windows: set JAVA_HOME=C:\path\to\jdk-21
 
 ## 安装
 
-**客户端**：把 `itemchat-1.2.2-neoforge.jar` 放进 `.minecraft/mods/`。
+**客户端**：把 `itemchat-1.2.3-neoforge.jar` 放进 `.minecraft/mods/`。
 
 **服务端**：同一个 jar 也放进服务端的 `mods/` 目录。**这一步是必须的** —— 广播消息需要服务端构造富文本组件，只有客户端装了的话，别人是看不到按钮的（游戏会提示“当前服务器没有安装 ItemChat”）。想用 FTB 任务分享功能的话，服务端也需要装 FTB 任务。
 
@@ -97,8 +99,9 @@ export JAVA_HOME=/path/to/jdk-21     # Windows: set JAVA_HOME=C:\path\to\jdk-21
 
 或者在 JEI 的物品列表里对着物品按中键，在 FTB 任务书里对着任务按中键。
 
-想改默认按键？目前中键是写死在 `ClientEvents#onMouseButtonPre` 里的（不占用原版按键绑定），
-把那里的 `GLFW.GLFW_MOUSE_BUTTON_MIDDLE` 改成别的即可。
+想改默认按键？打开「选项 → 控制 → 按键绑定」，在 **ItemChat** 分类下修改「**展示物品或任务**」。
+按住 Shift、Ctrl 或 Alt 再点击目标键可设置组合键；按 Esc 可解绑。改键会保存在本机的 `options.txt` 中。
+鼠标和键盘绑定都支持背包、JEI 与 FTB 任务；键盘绑定不会在已聚焦的原版文本输入框或 JEI 搜索框中触发，长按也只分享一次。
 
 ## 代码结构
 
@@ -117,14 +120,15 @@ src/main/java/com/example/itemchat/
 │   ├── QuestBroadcaster.java      FTB 软依赖守卫层（没装时降级提示）
 │   └── FtbQuestServerBridge.java  服务端侧真正接触 FTB 类型的代码
 └── client/
-    ├── ClientEvents.java          统一的中键捕获（InputEvent.MouseButton.Pre）
+    ├── ClientEvents.java          分享输入（早期鼠标事件 + 界面键盘事件）
+    ├── ClientKeyMappings.java     注册可配置的分享按键，默认鼠标中键
     ├── ClientPayloadHandler.java  处理 OpenJei / OpenQuest
     ├── JeiIntegration.java        JEI 软依赖桥接（取悬停物品 / 打开配方）
     ├── FtbQuestsIntegration.java  FTB 软依赖桥接（取悬停任务 / 打开任务书）
     └── ItemChatJeiPlugin.java     JEI 插件入口，拿到 IJeiRuntime
 
 src/main/resources/assets/itemchat/lang/
-├── en_us.json                     15 个翻译键
+├── en_us.json                     17 个翻译键（含按键名称与分类）
 └── zh_cn.json                     同上
 ```
 
@@ -242,6 +246,12 @@ src/main/resources/assets/itemchat/lang/
 | ResourceLocation | `new ResourceLocation(...)` | `ResourceLocation.fromNamespaceAndPath(...)` |
 | FTB 依赖 | `2001.x` + item-filters | `2101.x`（**不再需要 item-filters**） |
 
+## 1.2.3 更新内容
+
+- 新增：在原版按键绑定设置中修改分享按键，支持鼠标、键盘、组合键和解绑，默认仍为鼠标中键。
+- 修复：改键或解绑后不再捕获旧中键，AE 中键合成可正常接收点击。
+- 保留 JEI 物品与 FTB 任务的早期鼠标捕获；网络包结构和协议版本 `"2"` 不变。
+
 ## 1.2.2 更新内容
 
 - 修复：中键分享**任务链接**（FTB 为了让同一条任务能出现在多个章节里而自动生成的隐形链接对象）
@@ -279,7 +289,7 @@ src/main/resources/assets/itemchat/lang/
   基础物品的配方，而不是那一份具体组件的。
 - 组件数据特别大的物品（例如装满东西的潜影盒）在发包前会丢掉额外组件，避免超过自定义数据包
   约 32KB 的上限，消息里只显示物品本身和数量。
-- 在容器界面按中键会取消原版行为，因此创造模式下“中键克隆物品”在背包里不再生效。
+- 分享按键命中物品或任务时会取消该次输入的原行为。默认中键与创造模式克隆物品、AE 合成重合时，请在控制设置中改键或解绑。
 - 模组列表里的**描述**无法跟随游戏语言（见上）。
 - 任务名用的是**分享者**客户端的语言。这是受限于「一条服务端广播消息要能被所有人看懂」这个
   前提：FTB 的翻译表不在原版 `Language` 里，无法做成"每个玩家各看各的语言"的延迟翻译组件

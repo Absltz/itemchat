@@ -15,6 +15,8 @@ The item name in the message has a hover preview, and the [Check] button next to
 
 Press the middle mouse button on a quest in FTB Quests to share that quest, with a [Check Quest] button that opens the quest book at that quest.
 
+The sharing key can be changed or unbound in Options > Controls > Key Binds > ItemChat. Rebind it to keep the middle mouse button available for AE crafting.
+
 JEI and FTB Quests are both optional: without them everything else still works, only the corresponding button will say it was not detected.
 '''
 

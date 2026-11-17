@@ -1,4 +1,7 @@
 {
+  "key.categories.itemchat": "ItemChat",
+  "key.itemchat.share": "Share item or quest",
+
   "itemchat.chat.share_item": "[Item] %1$s shared %2$s%3$s %4$s",
   "itemchat.chat.share_quest": "[Quest] %1$s shared %2$s %3$s",
   "itemchat.chat.item_count": " x%s",

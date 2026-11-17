@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
  * 通过 {@code @Mod.EventBusSubscriber} 自动挂载。</p>
  *
  * <h3>版本</h3>
- * <p>本工程是 Forge 1.20.1 线（从 1.0.0 反编译基线重建），当前 <b>1.3.0</b>。</p>
+ * <p>本工程是 Forge 1.20.1 线（从 1.0.0 反编译基线重建）。</p>
  *
  * <h3>本地化</h3>
  * <p>所有对玩家显示的文字都走 {@code Component} 翻译键（语言文件在
